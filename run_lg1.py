@@ -7,29 +7,27 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "sra_data.db")
+DB_PATH = os.path.join(BASE_DIR, "lg1_data.db")
 
 TEAM_NAME_MAP = {
-    "Internazionale": "Internazionale", "Inter Milan": "Internazionale", "Inter": "Internazionale",
-    "AC Milan": "AC Milan", "Milan": "AC Milan",
-    "Juventus": "Juventus",
-    "Napoli": "Napoli",
-    "Atalanta": "Atalanta",
-    "AS Roma": "AS Roma", "Roma": "AS Roma",
-    "Lazio": "Lazio",
-    "Fiorentina": "Fiorentina",
-    "Bologna": "Bologna",
-    "Torino": "Torino",
-    "Genoa": "Genoa",
-    "Udinese": "Udinese",
-    "Cagliari": "Cagliari",
-    "Parma": "Parma",
-    "Monza": "Monza",
-    "Como": "Como",
-    "Lecce": "Lecce",
-    "Venezia": "Venezia",
-    "Sassuolo": "Sassuolo",
-    "Frosinone": "Frosinone"
+    "Paris Saint-Germain": "Paris Saint-Germain", "PSG": "Paris Saint-Germain",
+    "AS Monaco": "AS Monaco", "Monaco": "AS Monaco",
+    "Marseille": "Marseille", "Olympique de Marseille": "Marseille",
+    "Lille": "Lille", "LOSC Lille": "Lille",
+    "Lyon": "Lyon", "Olympique Lyonnais": "Lyon",
+    "Stade Rennais": "Stade Rennais", "Rennes": "Stade Rennais",
+    "Lens": "Lens", "RC Lens": "Lens",
+    "Nice": "Nice", "OGC Nice": "Nice",
+    "Brest": "Brest", "Stade Brestois": "Brest",
+    "Toulouse": "Toulouse",
+    "Strasbourg": "Strasbourg",
+    "AJ Auxerre": "AJ Auxerre", "Auxerre": "AJ Auxerre",
+    "Le Havre AC": "Le Havre AC", "Le Havre": "Le Havre AC",
+    "Angers": "Angers", "Angers SCO": "Angers",
+    "Lorient": "Lorient", "FC Lorient": "Lorient",
+    "Troyes": "Troyes", "ESTAC Troyes": "Troyes",
+    "Paris FC": "Paris FC",
+    "Le Mans": "Le Mans"
 }
 
 def normalize_team_name(raw_name):
@@ -43,7 +41,7 @@ def parse_espn_date(date_str):
         return "", ""
     try:
         dt_utc = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-        # France / Italy Time: CEST in summer (UTC+2), CET in winter (UTC+1)
+        # France Local Time: CEST in summer (UTC+2), CET in winter (UTC+1)
         dt_fr = dt_utc.astimezone(timezone(timedelta(hours=2)))
         # KST Time: UTC+9
         dt_kst = dt_utc.astimezone(timezone(timedelta(hours=9)))
@@ -52,60 +50,64 @@ def parse_espn_date(date_str):
         return date_str[:10], date_str[:10]
 
 OFFICIAL_STATS = {
-    "Lautaro Martínez": (7.80, 0.70), "Nicolò Barella": (7.65, 0.20), "Alessandro Bastoni": (7.55, 0.05),
-    "Hakan Çalhanoğlu": (7.55, 0.25), "Marcus Thuram": (7.50, 0.45), "Benjamin Pavard": (7.40, 0.05),
-    "Yann Sommer": (7.35, 0.0), "Federico Dimarco": (7.50, 0.15), "Denzel Dumfries": (7.30, 0.10),
-    "Rafael Leão": (7.70, 0.40), "Christian Pulisic": (7.50, 0.35), "Theo Hernández": (7.45, 0.15),
-    "Mike Maignan": (7.40, 0.0), "Álvaro Morata": (7.30, 0.40), "Tijjani Reijnders": (7.35, 0.20),
-    "Dušan Vlahović": (7.65, 0.60), "Bremer": (7.55, 0.05), "Kenan Yildiz": (7.40, 0.25),
-    "Teun Koopmeiners": (7.50, 0.30), "Douglas Luiz": (7.35, 0.15), "Michele Di Gregorio": (7.30, 0.0),
-    "Khvicha Kvaratskhelia": (7.65, 0.38), "Romelu Lukaku": (7.55, 0.50), "Alessandro Buongiorno": (7.45, 0.05),
-    "Scott McTominay": (7.40, 0.25), "Alex Meret": (7.25, 0.0), "Frank Anguissa": (7.30, 0.10),
-    "Ademola Lookman": (7.60, 0.50), "Mateo Retegui": (7.50, 0.55), "Éderson": (7.45, 0.18),
-    "Giorgio Scalvini": (7.35, 0.05), "Marco Carnesecchi": (7.30, 0.0), "Charles De Ketelaere": (7.40, 0.28),
-    "Paulo Dybala": (7.60, 0.40), "Artem Dovbyk": (7.40, 0.45), "Lorenzo Pellegrini": (7.30, 0.20),
-    "Gianluca Mancini": (7.30, 0.08), "Mile Svilar": (7.30, 0.0), "Matias Soulé": (7.30, 0.30),
-    "Mattia Zaccagni": (7.35, 0.30), "Valentín Castellanos": (7.25, 0.35), "Matteo Guendouzi": (7.25, 0.12),
-    "Ivan Provedel": (7.20, 0.0), "Nuno Tavares": (7.30, 0.05),
-    "Moise Kean": (7.35, 0.45), "Albert Guðmundsson": (7.40, 0.35), "David de Gea": (7.30, 0.0),
-    "Riccardo Orsolini": (7.30, 0.35), "Santiago Castro": (7.25, 0.30), "Remo Freuler": (7.20, 0.10),
-    "Lukasz Skorupski": (7.20, 0.0),
-    "Duván Zapata": (7.25, 0.40), "Samuele Ricci": (7.25, 0.10), "Vanja Milinković-Savić": (7.20, 0.0),
-    "Andrea Pinamonti": (7.15, 0.35), "Junior Messias": (7.10, 0.20), "Josep Martínez": (7.10, 0.0),
-    "Lorenzo Lucca": (7.15, 0.30), "Florian Thauvin": (7.20, 0.25), "Maduka Okoye": (7.10, 0.0),
-    "Roberto Piccoli": (7.05, 0.25), "Yerry Mina": (7.10, 0.05), "Simone Scuffet": (7.05, 0.0),
-    "Dennis Man": (7.20, 0.30), "Ange-Yoan Bonny": (7.10, 0.25), "Zion Suzuki": (7.10, 0.0),
-    "Matteo Pessina": (7.10, 0.15), "Dany Mota": (7.05, 0.20), "Stefano Turati": (7.05, 0.0),
-    "Patrick Cutrone": (7.15, 0.35), "Gabriel Strefezza": (7.10, 0.20), "Pepe Reina": (7.00, 0.0),
-    "Nikola Krstović": (7.05, 0.30), "Wladimiro Falcone": (7.10, 0.0),
-    "Joel Pohjanpalo": (7.10, 0.35), "Jesse Joronen": (7.00, 0.0),
-    "Armand Laurienté": (7.20, 0.30), "Domenico Berardi": (7.40, 0.35)
+    "Ousmane Dembélé": (7.70, 0.45), "Bradley Barcola": (7.65, 0.40), "Vitinha": (7.60, 0.20),
+    "Achraf Hakimi": (7.55, 0.15), "Warren Zaïre-Emery": (7.50, 0.15), "Gianluigi Donnarumma": (7.45, 0.0),
+    "Marquinhos": (7.45, 0.05), "Nuno Mendes": (7.40, 0.10), "João Neves": (7.50, 0.15),
+    "Gonçalo Ramos": (7.40, 0.50), "Désiré Doué": (7.35, 0.25),
+    "Aleksandr Golovin": (7.50, 0.25), "Denis Zakaria": (7.40, 0.15), "Folarin Balogun": (7.35, 0.40),
+    "Bremer": (7.55, 0.05), "Breel Embolo": (7.30, 0.35), "Maghnes Akliouche": (7.40, 0.30),
+    "Vanderson": (7.35, 0.10), "Radosław Majecki": (7.25, 0.0),
+    "Mason Greenwood": (7.65, 0.55), "Elye Wahi": (7.35, 0.40), "Pierre-Emile Højbjerg": (7.45, 0.15),
+    "Adrien Rabiot": (7.50, 0.20), "Leonardo Balerdi": (7.35, 0.05), "Gerónimo Rulli": (7.30, 0.0),
+    "Jonathan Rowe": (7.30, 0.30),
+    "Jonathan David": (7.65, 0.60), "Edon Zhegrova": (7.50, 0.35), "Angel Gomes": (7.40, 0.15),
+    "Bafodé Diakité": (7.35, 0.08), "Lucas Chevalier": (7.40, 0.0), "Benjamin André": (7.30, 0.10),
+    "Rayan Cherki": (7.45, 0.25), "Alexandre Lacazette": (7.55, 0.50), "Georges Mikautadze": (7.40, 0.45),
+    "Malick Fofana": (7.35, 0.30), "Lucas Perri": (7.25, 0.0), "Nemanja Matić": (7.30, 0.05),
+    "Florian Sotoca": (7.25, 0.25), "Andy Diouf": (7.25, 0.15), "Brice Samba": (7.35, 0.0),
+    "Przemysław Frankowski": (7.25, 0.10),
+    "Terem Moffi": (7.35, 0.45), "Jeremie Boga": (7.30, 0.25), "Gaëtan Laborde": (7.30, 0.35),
+    "Marcin Bułka": (7.35, 0.0), "Dante": (7.25, 0.05),
+    "Amine Gouiri": (7.35, 0.35), "Ludovic Blas": (7.30, 0.25), "Arnaud Kalimuendo": (7.35, 0.40),
+    "Steve Mandanda": (7.25, 0.0),
+    "Romain Del Castillo": (7.35, 0.30), "Ludovic Ajorque": (7.30, 0.35), "Pierre Lees-Melou": (7.40, 0.20),
+    "Marco Bizot": (7.30, 0.0),
+    "Emanuel Emegha": (7.25, 0.35), "Andrey Santos": (7.30, 0.20), "Sebastian Nanasi": (7.30, 0.25),
+    "Djordje Petrovic": (7.25, 0.0),
+    "Vincent Sierro": (7.25, 0.20), "Guillaume Restes": (7.25, 0.0),
+    "Donovan Léon": (7.15, 0.0), "Lassine Sinayoko": (7.15, 0.25),
+    "Arthur Desmas": (7.15, 0.0), "Emmanuel Sabbi": (7.10, 0.20),
+    "Himad Abdelli": (7.15, 0.15), "Yahia Fofana": (7.15, 0.0),
+    "Yvon Mvogo": (7.15, 0.0), "Laurent Abergel": (7.15, 0.10),
+    "Xavier Chavalerin": (7.05, 0.10), "Nicolas Lemaître": (7.00, 0.0),
+    "Ilan Kebbal": (7.15, 0.20), "Obed Nkambadio": (7.05, 0.0),
+    "Dame Gueye": (7.00, 0.15), "Nicolas Kocik": (6.95, 0.0)
 }
 
 TEAM_CONCEDED_PER_GAME = {
-    "Internazionale": 0.85, "Juventus": 0.90, "Napoli": 1.00, "AC Milan": 1.10,
-    "Atalanta": 1.15, "Lazio": 1.20, "AS Roma": 1.25, "Bologna": 1.25,
-    "Fiorentina": 1.30, "Torino": 1.35, "Genoa": 1.40, "Udinese": 1.45,
-    "Cagliari": 1.50, "Monza": 1.50, "Parma": 1.55, "Como": 1.60,
-    "Lecce": 1.65, "Sassuolo": 1.70, "Venezia": 1.75, "Frosinone": 1.80
+    "Paris Saint-Germain": 0.80, "Lille": 0.95, "Nice": 1.00, "AS Monaco": 1.05,
+    "Marseille": 1.10, "Lens": 1.15, "Brest": 1.20, "Lyon": 1.25,
+    "Stade Rennais": 1.30, "Strasbourg": 1.35, "Toulouse": 1.40, "AJ Auxerre": 1.45,
+    "Le Havre AC": 1.50, "Lorient": 1.55, "Angers": 1.60, "Troyes": 1.65,
+    "Paris FC": 1.70, "Le Mans": 1.75
 }
 
 TEAM_GOALS_PER_GAME = {
-    "Internazionale": 2.10, "Atalanta": 2.00, "AC Milan": 1.90, "Juventus": 1.80,
-    "Napoli": 1.80, "AS Roma": 1.60, "Lazio": 1.50, "Fiorentina": 1.50,
-    "Bologna": 1.40, "Torino": 1.20, "Udinese": 1.15, "Genoa": 1.10,
-    "Parma": 1.10, "Sassuolo": 1.10, "Cagliari": 1.05, "Como": 1.05,
-    "Monza": 1.00, "Lecce": 0.95, "Venezia": 0.90, "Frosinone": 0.85
+    "Paris Saint-Germain": 2.30, "AS Monaco": 1.95, "Marseille": 1.90, "Lille": 1.80,
+    "Lyon": 1.70, "Lens": 1.50, "Nice": 1.50, "Stade Rennais": 1.45,
+    "Brest": 1.40, "Strasbourg": 1.30, "Toulouse": 1.20, "AJ Auxerre": 1.15,
+    "Angers": 1.05, "Lorient": 1.05, "Le Havre AC": 1.00, "Troyes": 0.95,
+    "Paris FC": 0.90, "Le Mans": 0.85
 }
 
-LOW_POSSESSION_TEAMS = ["Lecce", "Venezia", "Frosinone", "Monza", "Como", "Cagliari", "Parma"]
+LOW_POSSESSION_TEAMS = ["Angers", "Le Havre AC", "Lorient", "Troyes", "Paris FC", "Le Mans", "AJ Auxerre"]
 
 MATCHWEEK_1_ABSENCES = {
-    "Internazionale": ["Tajon Buchanan"],
-    "AC Milan": ["Alessandro Florenzi", "Ismaël Bennacer"],
-    "Juventus": ["Arkadiusz Milik", "Fabio Miretti"],
-    "Atalanta": ["Giorgio Scalvini", "Gianluca Scamacca"],
-    "AS Roma": ["Alexis Saelemaekers"]
+    "Paris Saint-Germain": ["Lucas Hernández"],
+    "AS Monaco": ["Edan Diop"],
+    "Marseille": ["Valentin Rongier"],
+    "Lille": ["Ethan Mbappé"],
+    "Lyon": ["Ernest Nuamah"]
 }
 
 def load_rosters_from_json():
@@ -301,9 +303,9 @@ def get_match_prediction(home_team, away_team):
     }
 
 def run_pipeline():
-    url_mw1 = "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/scoreboard?dates=20260820-20260825"
-    url_mw2 = "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/scoreboard?dates=20260826-20260901"
-    url_mw3 = "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/scoreboard?dates=20260902-20260908"
+    url_mw1 = "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/scoreboard?dates=20260815-20260825"
+    url_mw2 = "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/scoreboard?dates=20260826-20260901"
+    url_mw3 = "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/scoreboard?dates=20260902-20260908"
     
     try:
         resp_mw1 = requests.get(url_mw1, timeout=10).json()
@@ -449,8 +451,8 @@ def run_pipeline():
 
     conn.commit()
     conn.close()
-    print("✅ Pipeline run complete! sra_data.db successfully updated.")
+    print("✅ Pipeline run complete! lg1_data.db successfully updated.")
 
 if __name__ == "__main__":
-    print(f"🚀 Serie A (SRA) 정규 시즌 파이프라인 시작 (개인 UV 0.1~2.0 & 팀 11.0 WUV 합성 로직 적용)", flush=True)
+    print(f"🚀 Ligue 1 (LG1) 정규 시즌 파이프라인 시작 (개인 UV 0.1~2.0 & 팀 11.0 WUV 합성 로직 적용)", flush=True)
     run_pipeline()
