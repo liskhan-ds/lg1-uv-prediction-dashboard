@@ -1,0 +1,40 @@
+name: LG1 Predict Pipeline
+
+on:
+  schedule:
+    # 1) 예측 무인 자동 실행: 21:17 KST (1차) & 21:47 KST (2차 백업)
+    - cron: '17 12 * * *'
+    - cron: '47 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lg1-predict:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Predict Pipeline
+        run: |
+          python run_lg1.py --mode predict
+
+      - name: Commit and Push Changes to GitHub
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add lg1_data.db app.py
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-predict lg1_data.db via GitHub Actions" && git push)
