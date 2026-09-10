@@ -14,14 +14,17 @@ DB_PATH = os.path.join(BASE_DIR, "lg1_data.db")
 # -----------------------------------------------------------------------------
 st.set_page_config(
 
-from common_nav import render_common_nav
-render_common_nav("LG1")
 
     page_title="Ligue 1 AI Match Predictor",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+from common_nav import render_common_nav
+render_common_nav("LG1")
+
+
 
 
 
