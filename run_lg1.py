@@ -1,4 +1,12 @@
 import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+from espn_stats_fetcher import get_espn_player_stats
 import sqlite3
 import requests
 import json
@@ -6,7 +14,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "lg1_data.db")
 
 TEAM_NAME_MAP = {
@@ -48,67 +55,6 @@ def parse_espn_date(date_str):
         return dt_fr.strftime("%Y-%m-%d"), dt_kst.strftime("%Y-%m-%d")
     except Exception:
         return date_str[:10], date_str[:10]
-
-OFFICIAL_STATS = {
-    "Ousmane Dembélé": (7.70, 0.45), "Bradley Barcola": (7.65, 0.40), "Vitinha": (7.60, 0.20),
-    "Achraf Hakimi": (7.55, 0.15), "Warren Zaïre-Emery": (7.50, 0.15), "Gianluigi Donnarumma": (7.45, 0.0),
-    "Marquinhos": (7.45, 0.05), "Nuno Mendes": (7.40, 0.10), "João Neves": (7.50, 0.15),
-    "Gonçalo Ramos": (7.40, 0.50), "Désiré Doué": (7.35, 0.25),
-    "Aleksandr Golovin": (7.50, 0.25), "Denis Zakaria": (7.40, 0.15), "Folarin Balogun": (7.35, 0.40),
-    "Bremer": (7.55, 0.05), "Breel Embolo": (7.30, 0.35), "Maghnes Akliouche": (7.40, 0.30),
-    "Vanderson": (7.35, 0.10), "Radosław Majecki": (7.25, 0.0),
-    "Mason Greenwood": (7.65, 0.55), "Elye Wahi": (7.35, 0.40), "Pierre-Emile Højbjerg": (7.45, 0.15),
-    "Adrien Rabiot": (7.50, 0.20), "Leonardo Balerdi": (7.35, 0.05), "Gerónimo Rulli": (7.30, 0.0),
-    "Jonathan Rowe": (7.30, 0.30),
-    "Jonathan David": (7.65, 0.60), "Edon Zhegrova": (7.50, 0.35), "Angel Gomes": (7.40, 0.15),
-    "Bafodé Diakité": (7.35, 0.08), "Lucas Chevalier": (7.40, 0.0), "Benjamin André": (7.30, 0.10),
-    "Rayan Cherki": (7.45, 0.25), "Alexandre Lacazette": (7.55, 0.50), "Georges Mikautadze": (7.40, 0.45),
-    "Malick Fofana": (7.35, 0.30), "Lucas Perri": (7.25, 0.0), "Nemanja Matić": (7.30, 0.05),
-    "Florian Sotoca": (7.25, 0.25), "Andy Diouf": (7.25, 0.15), "Brice Samba": (7.35, 0.0),
-    "Przemysław Frankowski": (7.25, 0.10),
-    "Terem Moffi": (7.35, 0.45), "Jeremie Boga": (7.30, 0.25), "Gaëtan Laborde": (7.30, 0.35),
-    "Marcin Bułka": (7.35, 0.0), "Dante": (7.25, 0.05),
-    "Amine Gouiri": (7.35, 0.35), "Ludovic Blas": (7.30, 0.25), "Arnaud Kalimuendo": (7.35, 0.40),
-    "Steve Mandanda": (7.25, 0.0),
-    "Romain Del Castillo": (7.35, 0.30), "Ludovic Ajorque": (7.30, 0.35), "Pierre Lees-Melou": (7.40, 0.20),
-    "Marco Bizot": (7.30, 0.0),
-    "Emanuel Emegha": (7.25, 0.35), "Andrey Santos": (7.30, 0.20), "Sebastian Nanasi": (7.30, 0.25),
-    "Djordje Petrovic": (7.25, 0.0),
-    "Vincent Sierro": (7.25, 0.20), "Guillaume Restes": (7.25, 0.0),
-    "Donovan Léon": (7.15, 0.0), "Lassine Sinayoko": (7.15, 0.25),
-    "Arthur Desmas": (7.15, 0.0), "Emmanuel Sabbi": (7.10, 0.20),
-    "Himad Abdelli": (7.15, 0.15), "Yahia Fofana": (7.15, 0.0),
-    "Yvon Mvogo": (7.15, 0.0), "Laurent Abergel": (7.15, 0.10),
-    "Xavier Chavalerin": (7.05, 0.10), "Nicolas Lemaître": (7.00, 0.0),
-    "Ilan Kebbal": (7.15, 0.20), "Obed Nkambadio": (7.05, 0.0),
-    "Dame Gueye": (7.00, 0.15), "Nicolas Kocik": (6.95, 0.0)
-}
-
-TEAM_CONCEDED_PER_GAME = {
-    "Paris Saint-Germain": 0.80, "Lille": 0.95, "Nice": 1.00, "AS Monaco": 1.05,
-    "Marseille": 1.10, "Lens": 1.15, "Brest": 1.20, "Lyon": 1.25,
-    "Stade Rennais": 1.30, "Strasbourg": 1.35, "Toulouse": 1.40, "AJ Auxerre": 1.45,
-    "Le Havre AC": 1.50, "Lorient": 1.55, "Angers": 1.60, "Troyes": 1.65,
-    "Paris FC": 1.70, "Le Mans": 1.75
-}
-
-TEAM_GOALS_PER_GAME = {
-    "Paris Saint-Germain": 2.30, "AS Monaco": 1.95, "Marseille": 1.90, "Lille": 1.80,
-    "Lyon": 1.70, "Lens": 1.50, "Nice": 1.50, "Stade Rennais": 1.45,
-    "Brest": 1.40, "Strasbourg": 1.30, "Toulouse": 1.20, "AJ Auxerre": 1.15,
-    "Angers": 1.05, "Lorient": 1.05, "Le Havre AC": 1.00, "Troyes": 0.95,
-    "Paris FC": 0.90, "Le Mans": 0.85
-}
-
-LOW_POSSESSION_TEAMS = ["Angers", "Le Havre AC", "Lorient", "Troyes", "Paris FC", "Le Mans", "AJ Auxerre"]
-
-MATCHWEEK_1_ABSENCES = {
-    "Paris Saint-Germain": ["Lucas Hernández"],
-    "AS Monaco": ["Edan Diop"],
-    "Marseille": ["Valentin Rongier"],
-    "Lille": ["Ethan Mbappé"],
-    "Lyon": ["Ernest Nuamah"]
-}
 
 def load_rosters_from_json():
     json_path = os.path.join(BASE_DIR, "rosters_2026.json")
@@ -175,82 +121,88 @@ def get_team_roster(team_name, absentees=None):
     return {"starters": starters, "subs": subs}
 
 def calculate_player_uv(player_data, team_name=""):
-    p_name = player_data.get("name", "")
-    p_pos = player_data.get("pos", "MF")
+    p_name_raw = player_data.get("name", "")
     
-    if p_name in OFFICIAL_STATS:
-        rating, xg_90 = OFFICIAL_STATS[p_name]
-    else:
-        rating = 6.80
-        xg_90 = 0.10
+    rating = None
+    goals_per90 = 0.0
+    position = player_data.get("pos", "MF")
+    
+    espn_res = get_espn_player_stats(p_name_raw)
+    if espn_res:
+        rating, goals_per90 = espn_res
         
-    std_tname = normalize_team_name(team_name)
-    conceded_per_game = TEAM_CONCEDED_PER_GAME.get(std_tname, 1.40)
-    def_uv = max(0.1, round(0.50 * (rating / 7.0) * (1.20 / max(0.5, conceded_per_game)), 2))
+    pos_clean = "GK" if position in ["G", "GK"] else ("DF" if position in ["D", "DF"] else ("MF" if position in ["M", "MF"] else "FW"))
     
-    goals_per_game = TEAM_GOALS_PER_GAME.get(std_tname, 1.30)
-    
-    pos_clean = "GK" if p_pos in ["G", "GK"] else ("DF" if p_pos in ["D", "DF"] else ("MF" if p_pos in ["M", "MF"] else "FW"))
-    
-    if pos_clean == "FW":
-        base_att = 0.65 * (rating / 7.0) * (1.0 + xg_90)
-    elif pos_clean == "MF":
-        base_att = 0.45 * (rating / 7.0) * (1.0 + (xg_90 * 0.5))
-    elif pos_clean == "DF":
-        base_att = 0.30 * (rating / 7.0)
+    if rating is None or rating == 0:
+        if pos_clean == "GK":
+            raw_uv = 0.95
+        elif pos_clean == "DF":
+            raw_uv = 0.90
+        elif pos_clean == "MF":
+            raw_uv = 0.88
+        else:
+            raw_uv = 0.85
+    elif rating >= 6.88:
+        if pos_clean in ["GK", "DF", "MF"]:
+            raw_uv = 1.0 + (rating - 6.88) * 0.50
+        else: # FW
+            raw_uv = 1.0 + (rating - 6.88) * 0.50 + (goals_per90 * 0.40)
     else:
-        base_att = 0.15 * (rating / 7.0)
+        slope = 0.80 if pos_clean == "MF" else 0.65
+        raw_uv = 1.0 + (rating - 6.88) * slope + (goals_per90 * 0.40 if pos_clean == "FW" else 0.0)
         
-    att_uv = max(0.1, round(base_att * (goals_per_game / 1.30), 2))
-    
-    att_uv = min(2.0, max(0.1, att_uv))
-    def_uv = min(2.0, max(0.1, def_uv))
-    
-    return {"att_uv": att_uv, "def_uv": def_uv, "total_uv": att_uv + def_uv}
+    return round(min(max(raw_uv, 0.1), 2.5), 3)
 
 def calculate_wuv(team_name, absentees=None):
     std_tname = normalize_team_name(team_name)
-    roster_info = get_team_roster(std_tname, absentees)
-    starters = roster_info["starters"]
+    roster = get_team_roster(std_tname, absentees=absentees)
+    starters = roster.get("starters", [])
+    subs = roster.get("subs", [])
     
-    att_list = []
-    def_list = []
+    st_uvs = [calculate_player_uv(p, std_tname) for p in starters]
+    sub_uvs = [calculate_player_uv(p, std_tname) for p in subs]
     
+    st_avg = sum(st_uvs) / len(st_uvs) if st_uvs else 0.95
+    sub_avg = sum(sub_uvs) / len(sub_uvs) if sub_uvs else 0.85
+    
+    st_tot_sum = sum(st_uvs)
+    sub_tot_sum = sum(sub_uvs)
+    raw_wuv = 0.85 * st_avg + 0.15 * sub_avg
+    team_wuv = round(raw_wuv * 11.0, 3)
+    
+    pos_sums = {"GK": 0.0, "DF": 0.0, "MF": 0.0, "FW": 0.0}
+    starters_detail = []
     for p in starters:
-        uv_res = calculate_player_uv(p, std_tname)
-        att_list.append(uv_res["att_uv"])
-        def_list.append(uv_res["def_uv"])
+        uv = calculate_player_uv(p, std_tname)
+        pos = p.get("pos", "MF")
+        pos_clean = "GK" if pos in ["G","GK"] else ("DF" if pos in ["D","DF"] else ("MF" if pos in ["M","MF"] else "FW"))
+        pos_sums[pos_clean] += uv
+        starters_detail.append({"name": p.get("name"), "pos": pos_clean, "uv": uv})
         
-    raw_team_att = sum(att_list) if att_list else 5.5
-    raw_team_def = sum(def_list) if def_list else 5.5
-    raw_team_uv = raw_team_att + raw_team_def
-    
-    goals_pg = TEAM_GOALS_PER_GAME.get(std_tname, 1.30)
-    conc_pg = TEAM_CONCEDED_PER_GAME.get(std_tname, 1.40)
-    
-    off_factor = goals_pg / 1.40
-    def_factor = 1.30 / conc_pg
-    
-    if std_tname in LOW_POSSESSION_TEAMS:
-        tactical_mod = 0.95
-    else:
-        tactical_mod = 1.05
-        
-    scaled_team_uv = 11.0 * (raw_team_uv / 11.0) * (0.4 * off_factor + 0.4 * def_factor + 0.2 * tactical_mod)
-    scaled_team_uv = max(8.5, min(14.5, round(scaled_team_uv, 2)))
+    tot_st_uv = sum(pos_sums.values()) or 1.0
+    gk_wuv = round(team_wuv * (pos_sums["GK"] / tot_st_uv), 2)
+    df_wuv = round(team_wuv * (pos_sums["DF"] / tot_st_uv), 2)
+    mf_wuv = round(team_wuv * (pos_sums["MF"] / tot_st_uv), 2)
+    fw_wuv = round(team_wuv * (pos_sums["FW"] / tot_st_uv), 2)
     
     return {
-        "team_name": std_tname,
-        "raw_team_uv": round(raw_team_uv, 2),
-        "team_wuv": scaled_team_uv,
-        "starters_count": len(starters)
+        "team_wuv": team_wuv,
+        "st_avg": round(st_avg, 3),
+        "sub_avg": round(sub_avg, 3),
+        "st_sum": round(st_tot_sum, 3),
+        "sub_sum": round(sub_tot_sum, 3),
+        "gk_wuv": gk_wuv,
+        "df_wuv": df_wuv,
+        "mf_wuv": mf_wuv,
+        "fw_wuv": fw_wuv,
+        "starters_detail": starters_detail
     }
 
 def get_match_prediction(home_team, away_team):
     h_info = calculate_wuv(home_team)
     a_info = calculate_wuv(away_team)
     
-    h_total = h_info["team_wuv"] + 0.25
+    h_total = h_info["team_wuv"] + 0.15
     a_total = a_info["team_wuv"]
     
     gap = h_total - a_total
