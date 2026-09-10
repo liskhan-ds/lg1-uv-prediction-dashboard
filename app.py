@@ -19,6 +19,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+from common_nav import render_common_nav
+render_common_nav("LG1")
+
+
+
 
 # Top Navigation Bar
 
